@@ -1,0 +1,126 @@
+#!/usr/bin/python
+import os
+import sys
+import subprocess
+import re
+import yaml
+import argparse
+
+foo = """
+    output=subprocess.check_output("parsechangelog | grep Version", shell=True)
+    ver = output.split(":")[1].strip()
+    match = re.compile(".*([0-9]+\.[0-9]+\.[0-9]+).*").match(ver)
+    if match:
+        version = match.group(1)
+    print "-> %s <-"%ver
+    print "-> %s <-"%version
+    """
+
+def build_repo(repo_uri,repo_name):
+    if (not os.path.isdir("%s/%s"%(script_dir,repo_name))):
+        print "ERROR: Unable to find %s, try cloning first"%repo_name
+        sys.exit(os.EX_OSFILE)
+    if explain_mode:
+        print "cd %s/%s"%(script_dir,repo_name)
+        print "dpkg-buildpackage -us -uc"
+    else:
+        os.chdir("%s/%s"%(script_dir,repo_name))
+        status = os.system("dpkg-buildpackage -us -uc")
+
+def clone_repo(repo_uri,repo_name):
+    if (os.path.isdir("%s/%s"%(script_dir,repo_name))):
+        if not explain_mode:
+            print "Repository: %s already cloned"%repo_name
+    else:
+        if explain_mode:
+            print "cd %s"%(script_dir)
+            print "git clone %s %s"%(repo_uri,repo_name)
+        else:
+            os.chdir(script_dir)
+            status = os.system("git clone %s %s"%(repo_uri,repo_name))
+
+################################
+
+def cmd_clean(argv):
+    argv = argv[2:]
+    parser = argparse.ArgumentParser(prog='metapack clone',epilog='MetaPack Package Management Tool')
+    parser.add_argument('-x', '--explain', help='Explain operations without executing', action='store_true')
+    args = parser.parse_args(argv)
+    global explain_mode
+    explain_mode = args.explain
+
+    if explain_mode:
+        print "cd %s"%(script_dir)
+        print "rm -f *.changes *.dsc *.deb *.gz *.build"
+    else:
+        os.chdir(script_dir)
+        status = os.system("rm -f *.changes *.dsc *.deb *.gz *.build")
+
+def cmd_clone(argv):
+    argv = argv[2:]
+    parser = argparse.ArgumentParser(prog='metapack clone',epilog='MetaPack Package Management Tool')
+    parser.add_argument('-x', '--explain', help='Explain operations without executing', action='store_true')
+    args = parser.parse_args(argv)
+    global explain_mode
+    explain_mode = args.explain
+
+    try:
+        repos = yaml.load(file('repos.yaml', 'r'))
+    except yaml.YAMLError, e:
+        print "Error in configuration file:", e
+
+    for repo in repos:
+        clone_repo(repo['repo'],repo['name'])
+
+def cmd_build(argv):
+    argv = argv[2:]
+    parser = argparse.ArgumentParser(prog='metapack clone',epilog='MetaPack Package Management Tool')
+    parser.add_argument('-x', '--explain', help='Explain operations without executing', action='store_true')
+    #parser.add_argument('-g', '--group', nargs='+', default=['personal'], help='Task Group(s) (default: %(default)s)')
+    args = parser.parse_args(argv)
+    global explain_mode
+    explain_mode = args.explain
+
+    try:
+        repos = yaml.load(file('repos.yaml', 'r'))
+    except yaml.YAMLError, e:
+        print "ERROR: configuration file:", e
+
+    for repo in repos:
+        build_repo(repo['repo'],repo['name'])
+
+def metapack_usage():
+    print """MetaPack Package Management Tool
+------------------------------------------------------------
+usage: metapack [--version] COMMAND [ARGS]
+
+Common Commands:
+\tmetapack clone\tclone repos
+\tmetapack build\tbuild repos
+\tmetapack clean\tdeletes *.changes *.dsc *.deb *.gz *.build
+
+Use 'metapack COMMAND -h' for more information about a command."""
+    sys.exit(os.EX_USAGE)
+
+################################
+
+if __name__ == '__main__':
+    global script_dir
+    script_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
+
+    if len(sys.argv) == 1:
+        metapack_usage()
+
+    else:
+        if (sys.argv[1] == '--version'):
+            version = "0.0.1"
+            print "Metapack Version %s"%version
+            sys.exit(os.EX_OK)
+        if (sys.argv[1] == 'clean'):
+            cmd_clean(sys.argv)
+        elif (sys.argv[1] == 'clone'):
+            cmd_clone(sys.argv)
+        elif (sys.argv[1] == 'build'):
+            cmd_build(sys.argv)
+        else:
+            metapack_usage()

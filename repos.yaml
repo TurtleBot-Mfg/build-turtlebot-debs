@@ -1,0 +1,18 @@
+-
+ name: turtlebot-branding
+ repo: git@github.com:TurtleBot-Mfg/turtlebot-branding.git
+-
+ name: turtlebot-config
+ repo: git@github.com:TurtleBot-Mfg/turtlebot-config.git
+-
+ name: turtlebot-desktop
+ repo: git@github.com:TurtleBot-Mfg/turtlebot-desktop.git
+-
+ name: turtlebot-env
+ repo: git@github.com:TurtleBot-Mfg/turtlebot-env.git
+-
+ name: turtlebot-ros-fuerte
+ repo: git@github.com:TurtleBot-Mfg/turtlebot-ros-fuerte.git
+-
+ name: turtlebot-wallpapers
+ repo: https://github.com/TurtleBot-Mfg/turtlebot-wallpapers.git

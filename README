@@ -1,0 +1,51 @@
+TurtleBot Debian Packages - Maintainers Guide
+============================================================
+This package is designed to make packaging slightly easier and
+should handle the most common workflows without having to
+remember the options to pass to dpkg-buildpackage or git-dch.
+
+It handles updating the changelog with git-dch, incrementing
+and tagging versions for releases, and building signed and
+unsigned debian packages.
+
+Running most commands with the -x option explains what they are
+about to do.
+
+MetaPack Package Management Tool
+------------------------------------------------------------
+usage: metapack [--version] COMMAND [ARGS]
+
+Common Commands:
+	metapack clone	clone repos
+	metapack build	build repos
+	metapack clean	deletes *.changes *.dsc *.deb *.gz *.build
+
+Use 'metapack COMMAND -h' for more information about a command.
+
+Incomplete Workflow Fragments (Patching)
+-------------------
+$ git pull
+$ cd <pkg-name>
+$ dch --distributor turtlebot -i
+dch --distributor turtlebot -l ihe
+* edit code *
+$ dpkg-buildpackage -us -uc
+$ sudo debi ../<pkg-name>_<pkg-version>_<pkg-arch>.changes
+
+$ debuild
+
+git-dch -N 0.0.2
+git add debian/changelog
+git commit
+git-buildpackage --git-tag
+git push origin master
+git push origin tag debian/0.0.1
+
+Notes
+-------------------
+Debianize Python Package
+python setup.py --command-packages=stdeb.command debianize
+
+Debian Package Lint
+lintian ../turtlebot-config_0.0.2-1_amd64.changes
+
