@@ -49,3 +49,6 @@ python setup.py --command-packages=stdeb.command debianize
 Debian Package Lint
 lintian ../turtlebot-config_0.0.2-1_amd64.changes
 
+dput ppa:iheartengineering/ros-support
+
+dput ppa:iheartengineering/ros-support turtlebot-doc-fuerte_0.0.1_source.changes

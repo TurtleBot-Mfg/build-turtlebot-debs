@@ -1,1 +1,7 @@
 turtlebot-*/
+*.changes
+*.dsc
+*.deb
+*.gz
+*.build
+*.upload

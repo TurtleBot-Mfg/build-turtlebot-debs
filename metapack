@@ -41,7 +41,7 @@ def clone_repo(repo_uri,repo_name):
 
 ################################
 
-def cmd_clean(argv):
+def cmd_purge(argv):
     argv = argv[2:]
     parser = argparse.ArgumentParser(prog='metapack clone',epilog='MetaPack Package Management Tool')
     parser.add_argument('-x', '--explain', help='Explain operations without executing', action='store_true')
@@ -51,10 +51,50 @@ def cmd_clean(argv):
 
     if explain_mode:
         print "cd %s"%(script_dir)
-        print "rm -f *.changes *.dsc *.deb *.gz *.build"
+        print "rm -f *.changes *.dsc *.deb *.gz *.build *.upload"
     else:
         os.chdir(script_dir)
-        status = os.system("rm -f *.changes *.dsc *.deb *.gz *.build")
+        status = os.system("rm -f *.changes *.dsc *.deb *.gz *.build *.upload")
+
+    try:
+        repos = yaml.load(file('repos.yaml', 'r'))
+    except yaml.YAMLError, e:
+        print "Error in configuration file:", e
+
+    for repo in repos:
+        if explain_mode:
+            print "rm -rf %s"%repo['name']
+        else:
+            status = os.system("rm -rf %s"%repo['name'])
+
+def cmd_clean(argv):
+    argv = argv[2:]
+    parser = argparse.ArgumentParser(prog='metapack clone',epilog='MetaPack Package Management Tool')
+    parser.add_argument('-x', '--explain', help='Explain operations without executing', action='store_true')
+    args = parser.parse_args(argv)
+    global explain_mode
+    explain_mode = args.explain
+
+    try:
+        repos = yaml.load(file('repos.yaml', 'r'))
+    except yaml.YAMLError, e:
+        print "ERROR: configuration file:", e
+
+    for repo in repos:
+        if explain_mode:
+            print "cd %s/%s"%(script_dir,repo['name'])
+            print "dh_clean"
+        else:
+            if os.path.isdir("%s/%s"%(script_dir,repo['name'])):
+                os.chdir("%s/%s"%(script_dir,repo['name']))
+                status = os.system("dh_clean")
+
+    if explain_mode:
+        print "cd %s"%(script_dir)
+        print "rm -f *.changes *.dsc *.deb *.gz *.build *.upload"
+    else:
+        os.chdir(script_dir)
+        status = os.system("rm -f *.changes *.dsc *.deb *.gz *.build *.upload")
 
 def cmd_clone(argv):
     argv = argv[2:]
@@ -97,7 +137,7 @@ usage: metapack [--version] COMMAND [ARGS]
 Common Commands:
 \tmetapack clone\tclone repos
 \tmetapack build\tbuild repos
-\tmetapack clean\tdeletes *.changes *.dsc *.deb *.gz *.build
+\tmetapack clean\tdeletes *.changes *.dsc *.deb *.gz *.build *.upload
 
 Use 'metapack COMMAND -h' for more information about a command."""
     sys.exit(os.EX_USAGE)

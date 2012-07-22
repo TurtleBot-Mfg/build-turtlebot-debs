@@ -16,3 +16,6 @@
 -
  name: turtlebot-wallpapers
  repo: https://github.com/TurtleBot-Mfg/turtlebot-wallpapers.git
+-
+ name: turtlebot-doc-fuerte
+ repo: https://github.com/TurtleBot-Mfg/turtlebot-doc-fuerte.git
