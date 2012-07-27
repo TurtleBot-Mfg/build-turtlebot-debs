@@ -1,7 +1,10 @@
 turtlebot-*/
+ros-*
 *.changes
 *.dsc
 *.deb
 *.gz
 *.build
 *.upload
+temp*
+*~

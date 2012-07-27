@@ -16,16 +16,35 @@ foo = """
     print "-> %s <-"%version
     """
 
-def build_repo(repo_uri,repo_name):
+def build_repo(repo_uri,repo_name,source):
     if (not os.path.isdir("%s/%s"%(script_dir,repo_name))):
         print "ERROR: Unable to find %s, try cloning first"%repo_name
         sys.exit(os.EX_OSFILE)
-    if explain_mode:
-        print "cd %s/%s"%(script_dir,repo_name)
-        print "dpkg-buildpackage -us -uc"
+    if source:
+        if explain_mode:
+            print "cd %s/%s"%(script_dir,repo_name)
+            print "dpkg-buildpackage -S -us -uc"
+        else:
+            os.chdir("%s/%s"%(script_dir,repo_name))
+            status = os.system("dpkg-buildpackage -S -us -uc")
     else:
-        os.chdir("%s/%s"%(script_dir,repo_name))
-        status = os.system("dpkg-buildpackage -us -uc")
+        if explain_mode:
+            print "cd %s/%s"%(script_dir,repo_name)
+            print "dpkg-buildpackage -us -uc"
+        else:
+            os.chdir("%s/%s"%(script_dir,repo_name))
+            status = os.system("dpkg-buildpackage -us -uc")
+
+def lint_repo(repo_uri,repo_name):
+    if explain_mode:
+        print "cd %s"%(script_dir)
+    else:
+        os.chdir(script_dir)
+
+    if explain_mode:
+        print "lintian %s*_source.changes"%repo_name
+    else:
+        status = os.system("lintian %s*_source.changes"%repo_name)
 
 def clone_repo(repo_uri,repo_name):
     if (os.path.isdir("%s/%s"%(script_dir,repo_name))):
@@ -116,6 +135,48 @@ def cmd_build(argv):
     argv = argv[2:]
     parser = argparse.ArgumentParser(prog='metapack clone',epilog='MetaPack Package Management Tool')
     parser.add_argument('-x', '--explain', help='Explain operations without executing', action='store_true')
+    parser.add_argument('-s', '--source', help='Source only build for upload to PPA', action='store_true')
+    parser.add_argument('package', nargs='?', default=None, help='Package (default: all)')
+    #parser.add_argument('-g', '--group', nargs='+', default=['personal'], help='Task Group(s) (default: %(default)s)')
+    args = parser.parse_args(argv)
+    global explain_mode
+    explain_mode = args.explain
+
+    print "Source: %s"%(args.source)
+
+    try:
+        repos = yaml.load(file('repos.yaml', 'r'))
+    except yaml.YAMLError, e:
+        print "ERROR: configuration file:", e
+
+    if args.package is None:
+        for repo in repos:
+            build_repo(repo['repo'],repo['name'],args.source)
+    else:
+        for repo in repos:
+            if repo['name'] == args.package:
+                build_repo(repo['repo'],repo['name'],args.source)
+
+def cmd_lint(argv):
+    argv = argv[2:]
+    parser = argparse.ArgumentParser(prog='metapack clone',epilog='MetaPack Package Management Tool')
+    parser.add_argument('-x', '--explain', help='Explain operations without executing', action='store_true')
+    args = parser.parse_args(argv)
+    global explain_mode
+    explain_mode = args.explain
+
+    try:
+        repos = yaml.load(file('repos.yaml', 'r'))
+    except yaml.YAMLError, e:
+        print "ERROR: configuration file:", e
+
+    for repo in repos:
+        lint_repo(repo['repo'],repo['name'])
+
+def cmd_pull(argv):
+    argv = argv[2:]
+    parser = argparse.ArgumentParser(prog='metapack clone',epilog='MetaPack Package Management Tool')
+    parser.add_argument('-x', '--explain', help='Explain operations without executing', action='store_true')
     #parser.add_argument('-g', '--group', nargs='+', default=['personal'], help='Task Group(s) (default: %(default)s)')
     args = parser.parse_args(argv)
     global explain_mode
@@ -127,7 +188,15 @@ def cmd_build(argv):
         print "ERROR: configuration file:", e
 
     for repo in repos:
-        build_repo(repo['repo'],repo['name'])
+        if (not os.path.isdir("%s/%s"%(script_dir,repo['name']))):
+            print "ERROR: Unable to find %s, try cloning first"%repo['name']
+            sys.exit(os.EX_OSFILE)
+        if explain_mode:
+            print "cd %s/%s"%(script_dir,repo['name'])
+            print "git pull origin master"
+        else:
+            os.chdir("%s/%s"%(script_dir,repo['name']))
+            status = os.system("git pull origin master")
 
 def metapack_usage():
     print """MetaPack Package Management Tool
@@ -158,9 +227,15 @@ if __name__ == '__main__':
             sys.exit(os.EX_OK)
         if (sys.argv[1] == 'clean'):
             cmd_clean(sys.argv)
+        elif (sys.argv[1] == 'purge'):
+            cmd_purge(sys.argv)
         elif (sys.argv[1] == 'clone'):
             cmd_clone(sys.argv)
         elif (sys.argv[1] == 'build'):
             cmd_build(sys.argv)
+        elif (sys.argv[1] == 'lint'):
+            cmd_lint(sys.argv)
+        elif (sys.argv[1] == 'pull'):
+            cmd_pull(sys.argv)
         else:
             metapack_usage()

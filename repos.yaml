@@ -19,3 +19,6 @@
 -
  name: turtlebot-doc-fuerte
  repo: https://github.com/TurtleBot-Mfg/turtlebot-doc-fuerte.git
+-
+ name: turtlebot-indicator
+ repo: git@github.com:TurtleBot-Mfg/turtlebot-indicator.git
