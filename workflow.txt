@@ -4,3 +4,13 @@ git add .
 git commit
 cd ..
 ./metapack snapshot ros-system-workstation
+< test changes >
+cd ros-system-workstation
+< edit files >
+git add .
+git commit
+cd ..
+./metapack snapshot ros-system-workstation
+< test changes >
+./metapack release ros-system-workstation
+dput ppa:iheartengineering/ros-support ros-system-workstation_0.0.2_amd64.changes
