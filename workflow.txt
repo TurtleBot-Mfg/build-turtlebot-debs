@@ -1,0 +1,6 @@
+cd ros-system-workstation
+< edit files >
+git add .
+git commit
+cd ..
+./metapack snapshot ros-system-workstation

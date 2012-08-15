@@ -22,3 +22,9 @@
 -
  name: turtlebot-indicator
  repo: git@github.com:TurtleBot-Mfg/turtlebot-indicator.git
+-
+ name: ros-system-tools
+ repo: git@github.com:TurtleBot-Mfg/ros-system-tools.git
+-
+ name: ros-system-workstation
+ repo: git@github.com:TurtleBot-Mfg/ros-system-workstation.git

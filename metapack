@@ -16,6 +16,78 @@ foo = """
     print "-> %s <-"%version
     """
 
+def is_snapshot(repo_uri,repo_name):
+    if explain_mode:
+        print "cd %s/%s"%(script_dir,repo_name)
+        print "parsechangelog | grep Version"
+    else:
+        os.chdir("%s/%s"%(script_dir,repo_name))
+        output=subprocess.check_output("parsechangelog | grep Version", shell=True)
+        ver = output.split(":")[1].strip()
+        match = re.compile(".*([0-9]+)\.([0-9]+)\.([0-9]+).*").match(ver)
+        if match:
+            ver_maj = int(match.group(1))
+            ver_min = int(match.group(2))
+            ver_rev = int(match.group(3))
+        else:
+            sys.exit(-1)
+
+        if ver == "%d.%d.%d"%(ver_maj,ver_min,ver_rev):
+            return False;
+        else:
+            return True;
+
+def detect_version(repo_uri,repo_name):
+    if explain_mode:
+        print "parsechangelog | grep Version"
+    else:
+        os.chdir("%s/%s"%(script_dir,repo_name))
+        output=subprocess.check_output("parsechangelog | grep Version", shell=True)
+        ver = output.split(":")[1].strip()
+        match = re.compile(".*([0-9]+)\.([0-9]+)\.([0-9]+).*").match(ver)
+        #match = re.compile(".*([0-9]+\.[0-9]+\.[0-9]+).*").match(ver)
+        if match:
+            #version = match.group(1)
+            ver_maj = int(match.group(1))
+            ver_min = int(match.group(2))
+            ver_rev = int(match.group(3))
+            print "-> %s <-"%ver
+            print "-> %d-%d-%d <-"%(ver_maj,ver_min,ver_rev)
+        else:
+            print "Error detecting version"
+        if is_snapshot(repo_uri,repo_name):
+            print "Snap!!"
+        else:
+            print "Release"
+
+def snapshot_repo(repo_uri,repo_name):
+    if explain_mode:
+        print "cd %s/%s"%(script_dir,repo_name)
+    os.chdir("%s/%s"%(script_dir,repo_name))
+    output=subprocess.check_output("parsechangelog | grep Version", shell=True)
+    ver = output.split(":")[1].strip()
+    match = re.compile(".*([0-9]+)\.([0-9]+)\.([0-9]+).*").match(ver)
+    if match:
+        ver_maj = int(match.group(1))
+        ver_min = int(match.group(2))
+        if is_snapshot(repo_uri,repo_name):
+            ver_rev = int(match.group(3))
+        else:
+            ver_rev = int(match.group(3)) + 1
+        snap_version = "%d.%d.%d"%(ver_maj,ver_min,ver_rev)
+    else:
+        print "Error detecting version"
+        sys.exit(0);
+
+    if explain_mode:
+        print "git-dch -N %s -S"%snap_version
+        if is_snapshot(repo_uri,repo_name):
+            print "git-buildpackage --git-tag-only --git-ignore-new"
+    else:
+        status = os.system("git-dch -N %s -S"%snap_version)
+        if is_snapshot(repo_uri,repo_name):
+            status = os.system("git-buildpackage --git-tag-only --git-ignore-new")
+
 def build_repo(repo_uri,repo_name,source):
     if (not os.path.isdir("%s/%s"%(script_dir,repo_name))):
         print "ERROR: Unable to find %s, try cloning first"%repo_name
@@ -133,11 +205,10 @@ def cmd_clone(argv):
 
 def cmd_build(argv):
     argv = argv[2:]
-    parser = argparse.ArgumentParser(prog='metapack clone',epilog='MetaPack Package Management Tool')
+    parser = argparse.ArgumentParser(prog='metapack build',epilog='MetaPack Package Management Tool')
     parser.add_argument('-x', '--explain', help='Explain operations without executing', action='store_true')
     parser.add_argument('-s', '--source', help='Source only build for upload to PPA', action='store_true')
     parser.add_argument('package', nargs='?', default=None, help='Package (default: all)')
-    #parser.add_argument('-g', '--group', nargs='+', default=['personal'], help='Task Group(s) (default: %(default)s)')
     args = parser.parse_args(argv)
     global explain_mode
     explain_mode = args.explain
@@ -156,6 +227,50 @@ def cmd_build(argv):
         for repo in repos:
             if repo['name'] == args.package:
                 build_repo(repo['repo'],repo['name'],args.source)
+
+def cmd_version(argv):
+    argv = argv[2:]
+    parser = argparse.ArgumentParser(prog='metapack version',epilog='MetaPack Package Management Tool')
+    parser.add_argument('-x', '--explain', help='Explain operations without executing', action='store_true')
+    parser.add_argument('package', nargs='?', default=None, help='Package (default: all)')
+    args = parser.parse_args(argv)
+    global explain_mode
+    explain_mode = args.explain
+
+    try:
+        repos = yaml.load(file('repos.yaml', 'r'))
+    except yaml.YAMLError, e:
+        print "ERROR: configuration file:", e
+
+    if args.package is None:
+        for repo in repos:
+            print "%s"%repo['name']
+            detect_version(repo['repo'],repo['name'])
+    else:
+        for repo in repos:
+            if repo['name'] == args.package:
+                print "%s"%repo['name']
+                detect_version(repo['repo'],repo['name'])
+
+def cmd_snapshot(argv):
+    argv = argv[2:]
+    parser = argparse.ArgumentParser(prog='metapack snapshot',epilog='MetaPack Package Management Tool')
+    parser.add_argument('-x', '--explain', help='Explain operations without executing', action='store_true')
+    parser.add_argument('-s', '--source', help='Source only build for upload to PPA', action='store_true')
+    parser.add_argument('package', nargs=1, default=None, help='Package')
+    args = parser.parse_args(argv)
+    global explain_mode
+    explain_mode = args.explain
+
+    try:
+        repos = yaml.load(file('repos.yaml', 'r'))
+    except yaml.YAMLError, e:
+        print "ERROR: configuration file:", e
+
+    for repo in repos:
+        if repo['name'] == args.package[0]:
+            snapshot_repo(repo['repo'],repo['name'])
+	    build_repo(repo['repo'],repo['name'],args.source)
 
 def cmd_lint(argv):
     argv = argv[2:]
@@ -204,9 +319,11 @@ def metapack_usage():
 usage: metapack [--version] COMMAND [ARGS]
 
 Common Commands:
-\tmetapack clone\tclone repos
-\tmetapack build\tbuild repos
-\tmetapack clean\tdeletes *.changes *.dsc *.deb *.gz *.build *.upload
+\tmetapack clone\t\tclone repos
+\tmetapack build\t\tbuild repos
+\tmetapack version\trepo version information
+\tmetapack snapshot\trepo version information
+\tmetapack clean\t\tdeletes *.changes *.dsc *.deb *.gz *.build *.upload
 
 Use 'metapack COMMAND -h' for more information about a command."""
     sys.exit(os.EX_USAGE)
@@ -233,6 +350,10 @@ if __name__ == '__main__':
             cmd_clone(sys.argv)
         elif (sys.argv[1] == 'build'):
             cmd_build(sys.argv)
+        elif (sys.argv[1] == 'version'):
+            cmd_version(sys.argv)
+        elif (sys.argv[1] == 'snapshot'):
+            cmd_snapshot(sys.argv)
         elif (sys.argv[1] == 'lint'):
             cmd_lint(sys.argv)
         elif (sys.argv[1] == 'pull'):
