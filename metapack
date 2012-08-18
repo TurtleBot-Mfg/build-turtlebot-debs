@@ -88,24 +88,41 @@ def snapshot_repo(repo_uri,repo_name):
         if is_snapshot(repo_uri,repo_name):
             status = os.system("git-buildpackage --git-tag-only --git-ignore-new")
 
-def build_repo(repo_uri,repo_name,source):
+def release_repo(repo_uri,repo_name):
+    if explain_mode:
+        print "cd %s/%s"%(script_dir,repo_name)
+    os.chdir("%s/%s"%(script_dir,repo_name))
+
+    if explain_mode:
+        print "git-dch -R"
+        print "git-buildpackage --git-tag-only --git-ignore-new"
+    else:
+        status = os.system("git-dch -R")
+        status = os.system("git-buildpackage --git-tag-only --git-ignore-new")
+
+def build_repo(repo_uri,repo_name,signed,source):
     if (not os.path.isdir("%s/%s"%(script_dir,repo_name))):
         print "ERROR: Unable to find %s, try cloning first"%repo_name
         sys.exit(os.EX_OSFILE)
+    if not signed:
+        flags = " -us -uc"
+    else: 
+        flags = ""
+
     if source:
         if explain_mode:
             print "cd %s/%s"%(script_dir,repo_name)
-            print "dpkg-buildpackage -S -us -uc"
+            print "dpkg-buildpackage -S%s"%flags
         else:
             os.chdir("%s/%s"%(script_dir,repo_name))
-            status = os.system("dpkg-buildpackage -S -us -uc")
+            status = os.system("dpkg-buildpackage -S%s"%flags)
     else:
         if explain_mode:
             print "cd %s/%s"%(script_dir,repo_name)
-            print "dpkg-buildpackage -us -uc"
+            print "dpkg-buildpackage%s"%flags
         else:
             os.chdir("%s/%s"%(script_dir,repo_name))
-            status = os.system("dpkg-buildpackage -us -uc")
+            status = os.system("dpkg-buildpackage%s"%flags)
 
 def lint_repo(repo_uri,repo_name):
     if explain_mode:
@@ -222,11 +239,11 @@ def cmd_build(argv):
 
     if args.package is None:
         for repo in repos:
-            build_repo(repo['repo'],repo['name'],args.source)
+            build_repo(repo['repo'],repo['name'],False,args.source)
     else:
         for repo in repos:
             if repo['name'] == args.package:
-                build_repo(repo['repo'],repo['name'],args.source)
+                build_repo(repo['repo'],repo['name'],False,args.source)
 
 def cmd_version(argv):
     argv = argv[2:]
@@ -270,7 +287,27 @@ def cmd_snapshot(argv):
     for repo in repos:
         if repo['name'] == args.package[0]:
             snapshot_repo(repo['repo'],repo['name'])
-	    build_repo(repo['repo'],repo['name'],args.source)
+	    build_repo(repo['repo'],repo['name'],False,args.source)
+
+def cmd_release(argv):
+    argv = argv[2:]
+    parser = argparse.ArgumentParser(prog='metapack release',epilog='MetaPack Package Management Tool')
+    parser.add_argument('-x', '--explain', help='Explain operations without executing', action='store_true')
+    parser.add_argument('-s', '--source', help='Source only build for upload to PPA', action='store_true')
+    parser.add_argument('package', default=None, help='Package')
+    args = parser.parse_args(argv)
+    global explain_mode
+    explain_mode = args.explain
+
+    try:
+        repos = yaml.load(file('repos.yaml', 'r'))
+    except yaml.YAMLError, e:
+        print "ERROR: configuration file:", e
+
+    for repo in repos:
+        if repo['name'] == args.package:
+            release_repo(repo['repo'],repo['name'])
+            build_repo(repo['repo'],repo['name'],True,True)
 
 def cmd_lint(argv):
     argv = argv[2:]
@@ -352,6 +389,8 @@ if __name__ == '__main__':
             cmd_build(sys.argv)
         elif (sys.argv[1] == 'version'):
             cmd_version(sys.argv)
+        elif (sys.argv[1] == 'release'):
+            cmd_release(sys.argv)
         elif (sys.argv[1] == 'snapshot'):
             cmd_snapshot(sys.argv)
         elif (sys.argv[1] == 'lint'):
