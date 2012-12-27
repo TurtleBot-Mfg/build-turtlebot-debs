@@ -14,6 +14,12 @@
  name: turtlebot-ros-fuerte
  repo: git@github.com:TurtleBot-Mfg/turtlebot-ros-fuerte.git
 -
+ name: turtlebot-ros-groovy
+ repo: git@github.com:TurtleBot-Mfg/turtlebot-ros-groovy.git
+-
+ name: turtlebot-rosinstall-groovy
+ repo: git@github.com:TurtleBot-Mfg/turtlebot-rosinstall-groovy.git
+-
  name: turtlebot-wallpapers
  repo: https://github.com/TurtleBot-Mfg/turtlebot-wallpapers.git
 -

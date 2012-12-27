@@ -22,6 +22,11 @@ Common Commands:
 
 Use 'metapack COMMAND -h' for more information about a command.
 
+Required Packages
+-------------------
+git-buildpackage
+cdbs
+
 Incomplete Workflow Fragments (Patching)
 -------------------
 $ git pull
