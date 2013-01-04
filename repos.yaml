@@ -11,11 +11,17 @@
  name: turtlebot-env
  repo: git@github.com:TurtleBot-Mfg/turtlebot-env.git
 -
+ name: turtlebot-env-groovy
+ repo: git@github.com:TurtleBot-Mfg/turtlebot-env-groovy.git
+-
  name: turtlebot-ros-fuerte
  repo: git@github.com:TurtleBot-Mfg/turtlebot-ros-fuerte.git
 -
  name: turtlebot-ros-groovy
  repo: git@github.com:TurtleBot-Mfg/turtlebot-ros-groovy.git
+-
+ name: ros-system-daemon-groovy
+ repo: git@github.com:TurtleBot-Mfg/ros-system-daemon-groovy.git
 -
  name: turtlebot-rosinstall-groovy
  repo: git@github.com:TurtleBot-Mfg/turtlebot-rosinstall-groovy.git
@@ -26,11 +32,29 @@
  name: turtlebot-doc-fuerte
  repo: https://github.com/TurtleBot-Mfg/turtlebot-doc-fuerte.git
 -
+ name: turtlebot-doc-groovy
+ repo: https://github.com/TurtleBot-Mfg/turtlebot-doc-groovy.git
+-
  name: turtlebot-indicator
  repo: git@github.com:TurtleBot-Mfg/turtlebot-indicator.git
+-
+ name: turtlebot-indicator-groovy
+ repo: git@github.com:TurtleBot-Mfg/turtlebot-indicator-groovy.git
 -
  name: ros-system-tools
  repo: git@github.com:TurtleBot-Mfg/ros-system-tools.git
 -
+ name: ros-system-tools-groovy
+ repo: git@github.com:TurtleBot-Mfg/ros-system-tools-groovy.git
+-
  name: ros-system-workstation
  repo: git@github.com:TurtleBot-Mfg/ros-system-workstation.git
+-
+ name: ros-system-workstation-groovy
+ repo: git@github.com:TurtleBot-Mfg/ros-system-workstation-groovy.git
+-
+ name: ihe-wallpapers
+ repo: git@github.com:IHeartEngineering/ihe-wallpapers.git
+-
+ name: ihe-branding
+ repo: git@github.com:IHeartEngineering/ihe-branding.git
