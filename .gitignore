@@ -1,5 +1,6 @@
 turtlebot-*/
-ros-*
+ros-*/
+ihe-*/
 *.changes
 *.dsc
 *.deb
