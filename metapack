@@ -325,9 +325,33 @@ def cmd_lint(argv):
     for repo in repos:
         lint_repo(repo['repo'],repo['name'])
 
+def cmd_diff(argv):
+    argv = argv[2:]
+    parser = argparse.ArgumentParser(prog='metapack diff',epilog='MetaPack Package Management Tool')
+    parser.add_argument('-x', '--explain', help='Explain operations without executing', action='store_true')
+    args = parser.parse_args(argv)
+    global explain_mode
+    explain_mode = args.explain
+
+    try:
+        repos = yaml.load(file('repos.yaml', 'r'))
+    except yaml.YAMLError, e:
+        print "ERROR: configuration file:", e
+
+    for repo in repos:
+        if (not os.path.isdir("%s/%s"%(script_dir,repo['name']))):
+            print "ERROR: Unable to find %s, try cloning first"%repo['name']
+            sys.exit(os.EX_OSFILE)
+        if explain_mode:
+            print "cd %s/%s"%(script_dir,repo['name'])
+            print "git diff"
+        else:
+            os.chdir("%s/%s"%(script_dir,repo['name']))
+            status = os.system("git diff")
+
 def cmd_pull(argv):
     argv = argv[2:]
-    parser = argparse.ArgumentParser(prog='metapack clone',epilog='MetaPack Package Management Tool')
+    parser = argparse.ArgumentParser(prog='metapack pull',epilog='MetaPack Package Management Tool')
     parser.add_argument('-x', '--explain', help='Explain operations without executing', action='store_true')
     #parser.add_argument('-g', '--group', nargs='+', default=['personal'], help='Task Group(s) (default: %(default)s)')
     args = parser.parse_args(argv)
@@ -361,6 +385,8 @@ Common Commands:
 \tmetapack version\trepo version information
 \tmetapack snapshot\trepo version information
 \tmetapack clean\t\tdeletes *.changes *.dsc *.deb *.gz *.build *.upload
+\tmetapack pull\t\tgit pull latest changes from remote
+\tmetapack diff\t\tgit diff changes
 
 Use 'metapack COMMAND -h' for more information about a command."""
     sys.exit(os.EX_USAGE)
@@ -395,6 +421,8 @@ if __name__ == '__main__':
             cmd_snapshot(sys.argv)
         elif (sys.argv[1] == 'lint'):
             cmd_lint(sys.argv)
+        elif (sys.argv[1] == 'diff'):
+            cmd_diff(sys.argv)
         elif (sys.argv[1] == 'pull'):
             cmd_pull(sys.argv)
         else:
