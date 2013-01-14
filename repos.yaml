@@ -33,7 +33,7 @@
  repo: https://github.com/TurtleBot-Mfg/turtlebot-doc-fuerte.git
 -
  name: turtlebot-doc-groovy
- repo: https://github.com/TurtleBot-Mfg/turtlebot-doc-groovy.git
+ repo: git@github.com:TurtleBot-Mfg/turtlebot-doc-groovy.git
 -
  name: turtlebot-indicator
  repo: git@github.com:TurtleBot-Mfg/turtlebot-indicator.git
